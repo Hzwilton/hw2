@@ -125,6 +125,7 @@ puts "Existing data deleted"
 # rails generate model Movie title:string year:integer rating:string studio:references
 # rails generate model Actor name:string
 # rails generate model Casting movie:references actor:references role:string
+# rails db:migrate
 
 
 # Insert data into the database that reflects the sample data shown above.
