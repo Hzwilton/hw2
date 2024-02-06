@@ -72,25 +72,59 @@
 # TODO!
 
 # Delete existing data
-Studio.destroy_all
+Casting.destroy_all
 Movie.destroy_all
 Actor.destroy_all
+Studio.destroy_all
+
 # Assuming you have a model that represents the join between movies and actors, e.g., Cast
-Cast.destroy_all
+class Studio < ApplicationRecord
+  has_many :movies
+end
+
+class Movie < ApplicationRecord
+  belongs_to :studio
+  has_many :castings
+  has_many :actors, through: :castings
+end
+
+class Actor < ApplicationRecord
+  has_many :castings
+  has_many :movies, through: :castings
+end
+
+class Casting < ApplicationRecord
+  belongs_to :movie
+  belongs_to :actor
+  # Optionally, include a column for 'role' to specify the character played
+end
+
+class CreateCastings < ActiveRecord::Migration[6.0] # or [7.0] depending on your Rails version
+  def change
+    create_table :castings do |t|
+      t.references :movie, null: false, foreign_key: true
+      t.references :actor, null: false, foreign_key: true
+      t.string :role # Optional: for storing the character's name
+      
+      t.timestamps
+    end
+  end
+end
+
+Casting.destroy_all
+Movie.destroy_all
+Actor.destroy_all
+Studio.destroy_all
 
 puts "Existing data deleted"
-
 
 # Generate models and tables, according to the domain model.
 # TODO!
 
-rails generate model Studio name:string
-rails generate model Movie title:string year:integer rating:string studio:references
-rails generate model Actor name:string
-rails generate model Casting movie:references actor:references role:string
-
-rails db:migrate
-
+# rails generate model Studio name:string
+# rails generate model Movie title:string year:integer rating:string studio:references
+# rails generate model Actor name:string
+# rails generate model Casting movie:references actor:references role:string
 
 
 # Insert data into the database that reflects the sample data shown above.
@@ -145,7 +179,6 @@ puts "Movies"
 puts "======"
 puts ""
 
-
 # Query the movies data and loop through the results to display the movies output.
 # TODO!
 # Query all movies and print their details
@@ -162,9 +195,15 @@ puts ""
 # Query the cast data and loop through the results to display the cast output for each movie.
 # TODO!
 # Query all movies and prepare for looping
-movies = Movie.includes(:studio).order(:year).all
+movies = Movie.includes(:castings => :actor).order(:year)
 
 # Using a for loop to iterate through the movies
-for movie in movies
-  puts "#{movie.title.ljust(25)} #{movie.year.to_s.ljust(15)} #{movie.rating.ljust(10)} #{movie.studio.name}"
+
+movies.each do |movie|
+  movie.castings.each do |casting|
+    # Correctly access the actor's name and the role from the casting
+    # Ensure that `actor.name` and `casting.role` (or `casting.character_name` depending on your column name) correctly fetch the required information
+    puts "#{movie.title.ljust(25)} #{casting.actor.name.ljust(25)} #{casting.role}"
+  end
 end
+
